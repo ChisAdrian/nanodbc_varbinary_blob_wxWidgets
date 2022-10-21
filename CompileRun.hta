@@ -1,0 +1,147 @@
+<!-- daily_task.vbs.hta -->
+<html>
+<head>
+<title id="title">daily_task</title>
+
+
+
+<HTA:APPLICATION ID="daily_task" APPLICATIONNAME="daily_task" 
+ICON="daily.ico" 
+>
+
+
+
+<script language="vbscript">
+'https://www.w3schools.com/asp/func_dateadd.asp
+'daily_task.vbs
+
+Window.resizeTo 750, 800
+
+Sub Compile_Run()
+t_exe_name = document.all.exe_name.value
+t_Proj_src_folder = document.all.Proj_src_folder.value
+t_wxWidgets_incl = document.all.wxWidgets_incl.value
+t_wxWidgets_lib = document.all.wxWidgets_lib.value 
+t_wxWidgets_lib_dir = document.all.wxWidgets_lib_dir.value 
+t_mingw_bin = document.all.mingw_bin.value 
+t_libs = document.all.libs.value 
+t_windres_o = document.all.windres_o.value 
+t_winres_e  = document.all.winres_e.value 
+t_compile_cpp_opt = document.all.compile_cpp_opt.value
+
+'check and SET mingw_bin 
+Set wshShell = CreateObject( "WScript.Shell" )
+arrEnvironments = Array( "USER")
+ALL_PT = ""
+For Each strEnv In arrEnvironments
+	Set wshEnv = wshShell.Environment( strEnv )
+	ALL_PT = wshEnv( "PATH" )
+Next
+Set wshEnv   = Nothing
+Set wshShell = Nothing
+
+If InStr(ALL_PT, mingw_bin ) = 0 Then
+	Set objShell = CreateObject("WScript.Shell")
+	Set objEnv = objShell.Environment("USER")
+	'What we want to add
+	PathToAdd = t_mingw_bin
+	'Get the current value of Path
+	oldSystemPath = objEnv("PATH")
+	'Build the new Path
+	newSystemPath = oldSystemPath & ";" & PathToAdd
+	'Set the new Path
+	objEnv("PATH") = newSystemPath
+End If
+'!check and SET mingw_bin 
+
+Set objFSO = CreateObject("Scripting.FileSystemObject") 
+objStartFolder = t_Proj_src_folder
+Set objFolder = objFSO.GetFolder(objStartFolder)
+Set colFiles = objFolder.Files
+
+cmp_txt = "cd " & objStartFolder & vbNewLine
+'resource file'
+For Each objFile in colFiles 
+    strFileName = objFile.Name
+    If objFSO.GetExtensionName(strFileName) = "rc" Then 
+	   cmp_txt = cmp_txt & "windres.exe " & t_wxWidgets_incl  & t_wxWidgets_lib & t_windres_o &  objFile.path & t_winres_e  & vbNewLine
+    End If
+Next
+'cpp files'
+For Each objFile in colFiles 
+    strFileName = objFile.Name
+    If objFSO.GetExtensionName(strFileName) = "cpp" Then 
+		cmp_txt = cmp_txt & t_compile_cpp_opt & t_wxWidgets_incl  & t_wxWidgets_lib & " -c " &  objFile.path & " -o " & strFileName & ".o"  & vbNewLine
+       
+    End If
+Next
+
+onjs = ""
+'o files'
+For Each objFile in colFiles 
+    strFileName = objFile.Name
+    If objFSO.GetExtensionName(strFileName) = "o" Then 
+		onjs = onjs & strFileName & " " 
+    End If
+Next
+'linker abs rub
+cmp_txt = cmp_txt &  "g++.exe " & t_wxWidgets_lib_dir  & " -o " & t_exe_name & " " &  onjs &  t_libs & vbNewLine & t_exe_name & vbNewLine
+Set FSO = CreateObject("Scripting.FileSystemObject")
+Set File = FSO.CreateTextFile(objStartFolder&"\compile.bat",True)
+File.Write cmp_txt
+File.Close
+
+CreateObject("WScript.Shell").Run objStartFolder&"\compile.bat"
+
+End Sub
+
+
+
+</script>
+<style>
+input 
+{
+width :100%;
+}
+</style>
+
+</head>
+<body>
+<input id="BtnExit"   type="button" value="Exit"   onclick="window.close">
+&nbsp;
+
+
+<label>Proj_src_folder</label>
+<input id="Proj_src_folder" type="text" value="C:\Portables\VisualStudioCode_Projects\wxwidgets_CMD">
+<hr>
+<label>exe_name</label>
+<input id="exe_name" type="text" value="out.exe">
+<hr>
+<label>wxWidgets_incl</label>
+<input id="wxWidgets_incl" type="text" value=" -IC:\Portables\CodeBlocks20.03\wxWidgets-3.0.5\include">
+<hr>
+<label>wxWidgets_lib</label>
+<input id="wxWidgets_lib" type="text" value = " -IC:\Portables\CodeBlocks20.03\wxWidgets-3.0.5\lib\gcc_lib\mswu">
+<hr>
+<label>wxWidgets_lib_dir</label>
+<input id="wxWidgets_lib_dir" type="text" value=" -LC:\Portables\CodeBlocks20.03\wxWidgets-3.0.5\lib\gcc_lib">
+<hr>
+<label>mingw_bin</label>
+<input id="mingw_bin" type="text" value="C:\Portables\CodeBlocks20.03\MingwDistrox64_GCC 9.2.0_Boost 1.71.0\MinGW\bin">
+<hr>
+<label>libs</label>
+<input id="libs" type="text" value=" resource.res -s -mthreads  -lwxmsw30u -lwxpng -lwxjpeg -lwxtiff -lwxzlib -lkernel32 -luser32 -lgdi32 -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid -lcomctl32 -lwsock32 -lodbc32 -mwindows">
+<hr>
+<label>windres_o</label>
+<input id="windres_o" type="text" value=" -J rc -O coff -i ">
+<hr>
+<label>winres_e</label>
+<input id="winres_e" type="text" value=" -o resource.res">
+<hr>
+<label>compile_cpp_opt</label>
+<input id="compile_cpp_opt" type="text" value= "g++.exe -Wall -std=gnu++17 -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DwxUSE_UNICODE -O2">
+<hr>
+<input id="Compile_Run"   type="button" value="Compile_Run"   onclick="Compile_Run">
+
+</body>
+</html>
