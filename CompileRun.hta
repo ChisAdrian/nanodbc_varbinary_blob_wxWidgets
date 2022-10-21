@@ -1,20 +1,10 @@
 <!-- daily_task.vbs.hta -->
 <html>
 <head>
-<title id="title">daily_task</title>
+<title id="title">Compile_Run</title>
 
-
-
-<HTA:APPLICATION ID="daily_task" APPLICATIONNAME="daily_task" 
-ICON="daily.ico" 
->
-
-
-
+<HTA:APPLICATION ID="Compile_Run" APPLICATIONNAME="Compile_Run" >
 <script language="vbscript">
-'https://www.w3schools.com/asp/func_dateadd.asp
-'daily_task.vbs
-
 Window.resizeTo 750, 800
 
 Sub Compile_Run()
@@ -94,8 +84,6 @@ File.Close
 CreateObject("WScript.Shell").Run objStartFolder&"\compile.bat"
 
 End Sub
-
-
 
 </script>
 <style>
